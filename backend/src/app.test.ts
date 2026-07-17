@@ -1,8 +1,10 @@
 import { describe, it } from "node:test";
 import assert from "node:assert/strict";
-import { app } from "./app.js";
+import { createApp } from "./app.js";
 
 describe("Express app", () => {
+  const app = createApp();
+
   it("should have Express app defined", () => {
     assert.ok(app, "App should be defined");
   });

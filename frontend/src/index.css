@@ -1,0 +1,46 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --bg: #f3f7fb;
+  --fg: #0b1220;
+  --accent: #0f9f6e;
+  --accent-2: #e76f51;
+}
+
+.dark {
+  --bg: #0b1220;
+  --fg: #e7eef6;
+  --accent: #3ddc97;
+  --accent-2: #ffb347;
+}
+
+html,
+body,
+#root {
+  min-height: 100%;
+}
+
+body {
+  background: var(--bg);
+  color: var(--fg);
+}
+
+@layer components {
+  .btn-primary {
+    @apply inline-flex items-center justify-center gap-2 rounded-xl bg-leaf-600 px-5 py-2.5 text-sm font-semibold text-white transition hover:bg-leaf-700 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-leaf-500 disabled:opacity-50;
+  }
+  .btn-ghost {
+    @apply inline-flex items-center justify-center gap-2 rounded-xl border border-ink-700/10 bg-white/60 px-4 py-2 text-sm font-medium text-ink-900 backdrop-blur transition hover:bg-white dark:border-white/10 dark:bg-white/5 dark:text-mist-50 dark:hover:bg-white/10;
+  }
+  .panel {
+    @apply rounded-2xl border border-ink-900/5 bg-white/80 p-5 shadow-soft backdrop-blur dark:border-white/10 dark:bg-ink-900/70;
+  }
+  .input {
+    @apply w-full rounded-xl border border-ink-900/10 bg-white px-3 py-2.5 text-sm outline-none ring-leaf-500/30 transition focus:ring-2 dark:border-white/10 dark:bg-ink-800;
+  }
+  .label {
+    @apply mb-1.5 block text-xs font-semibold uppercase tracking-wide text-ink-700/70 dark:text-mist-200/70;
+  }
+}

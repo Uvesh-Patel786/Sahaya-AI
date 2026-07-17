@@ -1,63 +1,73 @@
+version: '3.8'
+
 services:
-  mongodb:
-    image: mongo:7
-    ports:
-      - "27017:27017"
-    volumes:
-      - mongo_data:/data/db
-    healthcheck:
-      test: ["CMD", "mongosh", "--eval", "db.adminCommand('ping')"]
-      interval: 10s
-      timeout: 5s
-      retries: 5
-
-  chromadb:
-    image: chromadb/chroma:0.5.23
-    ports:
-      - "8001:8000"
-    volumes:
-      - chroma_data:/chroma/chroma
-    environment:
-      - IS_PERSISTENT=TRUE
-      - ANONYMIZED_TELEMETRY=FALSE
-
   backend:
-    build: ./backend
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: sahayak-backend
     ports:
-      - "4000:4000"
-    env_file: .env
+      - "3000:3000"
     environment:
-      MONGODB_URI: mongodb://mongodb:27017/sahayak
-      AI_SERVICE_URL: http://ai-service:8000
-      UPLOAD_DIR: /app/uploads
-    volumes:
-      - uploads_data:/app/uploads
+      - NODE_ENV=production
+      - PORT=3000
     depends_on:
-      mongodb:
-        condition: service_healthy
-      ai-service:
-        condition: service_started
+      - mongodb
+    networks:
+      - sahayak-network
+    restart: unless-stopped
 
   ai-service:
-    build: ./ai-service
+    image: python:3.11-slim
+    container_name: sahayak-ai-service
+    working_dir: /app
+    command: >
+      bash -c "pip install -r ai-service/requirements.txt &&
+               python -m uvicorn ai-service.main:app --host 0.0.0.0 --port 8000"
     ports:
       - "8000:8000"
-    env_file: .env
+    volumes:
+      - ./ai-service:/app/ai-service
+      - ./backend:/app/backend
     environment:
-      CHROMA_URL: http://chromadb:8000
-      MONGODB_URI: mongodb://mongodb:27017/sahayak
-    depends_on:
-      - chromadb
-      - mongodb
+      - PYTHONUNBUFFERED=1
+    networks:
+      - sahayak-network
+    restart: unless-stopped
 
   frontend:
-    build: ./frontend
+    image: node:22-alpine
+    container_name: sahayak-frontend
+    working_dir: /app
+    command: >
+      bash -c "cd frontend &&
+               npm install &&
+               npm run dev"
     ports:
-      - "5173:80"
-    depends_on:
-      - backend
+      - "5173:5173"
+    volumes:
+      - ./frontend:/app/frontend
+      - /app/frontend/node_modules
+    networks:
+      - sahayak-network
+    restart: unless-stopped
+
+  mongodb:
+    image: mongo:7
+    container_name: sahayak-mongodb
+    ports:
+      - "27017:27017"
+    environment:
+      MONGO_INITDB_DATABASE: sahayak
+    volumes:
+      - mongodb-data:/data/db
+    networks:
+      - sahayak-network
+    restart: unless-stopped
+
+networks:
+  sahayak-network:
+    driver: bridge
 
 volumes:
-  mongo_data:
-  chroma_data:
-  uploads_data:
+  mongodb-data:

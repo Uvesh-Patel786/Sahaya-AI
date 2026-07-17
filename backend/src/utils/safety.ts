@@ -1,25 +1,27 @@
 /**
- * Lightweight prompt-injection / abuse filters before forwarding to AI.
+ * Sanitizes user input to prevent prompt injection attacks
  */
-const BLOCK_PATTERNS = [
-  /ignore\s+(all\s+)?(previous|prior)\s+instructions/i,
-  /system\s*prompt/i,
-  /disclose\s+(your|the)\s+(system|hidden)\s+prompt/i,
-  /<\s*script\b/i,
-];
+export function sanitizeUserText(text: string): string {
+  const injectionPatterns = [
+    /ignore\s+previous\s+instructions/i,
+    /reveal\s+the\s+system\s+prompt/i,
+    /disregard\s+previous/i,
+    /system\s+prompt/i,
+  ];
 
-export function sanitizeUserText(input: string, maxLen = 8000): string {
-  const trimmed = input.trim().slice(0, maxLen);
-  for (const pattern of BLOCK_PATTERNS) {
-    if (pattern.test(trimmed)) {
-      throw new Error("Message rejected by safety filters. Please rephrase your question.");
+  for (const pattern of injectionPatterns) {
+    if (pattern.test(text)) {
+      throw new Error("Potential prompt injection detected");
     }
   }
-  return trimmed;
+
+  return text.trim();
 }
 
-export function redactedLog(message: string): string {
-  return message
-    .replace(/\b\d{4}\s?\d{4}\s?\d{4}\b/g, "[REDACTED_AADHAAR]")
-    .replace(/\b[A-Z]{5}\d{4}[A-Z]\b/gi, "[REDACTED_PAN]");
+/**
+ * Redacts sensitive information like Aadhaar numbers from logs
+ */
+export function redactedLog(text: string): string {
+  // Aadhaar format: 4 digits, space, 4 digits, space, 4 digits
+  return text.replace(/\d{4}\s+\d{4}\s+\d{4}/g, "REDACTED_AADHAAR");
 }

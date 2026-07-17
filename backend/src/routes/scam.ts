@@ -55,7 +55,7 @@ router.post("/analyze", requireAuth, validateBody(scamSchema), async (req: Authe
   try {
     let text: string;
     try {
-      text = sanitizeUserText(req.body.text, 5000);
+      text = sanitizeUserText(req.body.text);
     } catch (e) {
       throw new AppError((e as Error).message, 400);
     }
